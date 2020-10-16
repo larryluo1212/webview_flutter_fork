@@ -1,7 +1,7 @@
-name: webview_flutter
+name: webview_flutter_fork
 description: A Flutter plugin that provides a WebView widget on Android and iOS.
 version: 1.0.3
-homepage: https://github.com/flutter/plugins/tree/master/packages/webview_flutter
+#homepage: https://github.com/flutter/plugins/tree/master/packages/webview_flutter
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
@@ -25,4 +25,4 @@ flutter:
         package: io.flutter.plugins.webviewflutter
         pluginClass: WebViewFlutterPlugin
       ios:
-        pluginClass: FLTWebViewFlutterPlugin
+        pluginClass: FLTWebViewFlutterPluginFork

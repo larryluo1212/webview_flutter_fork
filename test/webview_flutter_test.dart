@@ -910,7 +910,7 @@ class FakePlatformWebView {
     debuggingEnabled = params['settings']['debuggingEnabled'];
     userAgent = params['settings']['userAgent'];
     channel = MethodChannel(
-        'plugins.flutter.io/webview_$id', const StandardMethodCodec());
+        'plugins.flutter.io/webview.fork_$id', const StandardMethodCodec());
     channel.setMockMethodCallHandler(onMethodCall);
   }
 
@@ -1095,7 +1095,7 @@ Map<dynamic, dynamic> _decodeParams(Uint8List paramsMessage) {
 class _FakeCookieManager {
   _FakeCookieManager() {
     final MethodChannel channel = const MethodChannel(
-      'plugins.flutter.io/cookie_manager',
+      'plugins.flutter.io/cookie_manager.fork',
       StandardMethodCodec(),
     );
     channel.setMockMethodCallHandler(onMethodCall);

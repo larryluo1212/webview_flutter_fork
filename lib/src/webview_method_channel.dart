@@ -14,7 +14,7 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
   /// given [id], using the given [WebViewPlatformCallbacksHandler].
   MethodChannelWebViewPlatform(int id, this._platformCallbacksHandler)
       : assert(_platformCallbacksHandler != null),
-        _channel = MethodChannel('plugins.flutter.io/webview_$id') {
+        _channel = MethodChannel('plugins.flutter.io/webview.fork_$id') {
     _channel.setMethodCallHandler(_onMethodCall);
   }
 
@@ -23,7 +23,7 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
   final MethodChannel _channel;
 
   static const MethodChannel _cookieManagerChannel =
-      MethodChannel('plugins.flutter.io/cookie_manager');
+      MethodChannel('plugins.flutter.io/cookie_manager.fork');
 
   Future<bool> _onMethodCall(MethodCall call) async {
     switch (call.method) {
@@ -42,6 +42,12 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
         return null;
       case 'onPageStarted':
         _platformCallbacksHandler.onPageStarted(call.arguments['url']);
+        return null;
+      case 'onSelectText':
+        _platformCallbacksHandler.onSelectText(call.arguments['url'],call.arguments['text']);
+        return null;
+      case 'onProgressChanged':
+        _platformCallbacksHandler.onProgressChanged(call.arguments['progress']);
         return null;
       case 'onWebResourceError':
         _platformCallbacksHandler.onWebResourceError(

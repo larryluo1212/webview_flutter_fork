@@ -8,7 +8,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_fork/webview_flutter.dart';
 
 void main() => runApp(MaterialApp(home: WebViewExample()));
 
@@ -57,7 +57,7 @@ class _WebViewExampleState extends State<WebViewExample> {
       // to allow calling Scaffold.of(context) so we can show a snackbar.
       body: Builder(builder: (BuildContext context) {
         return WebView(
-          initialUrl: 'https://flutter.dev',
+          initialUrl: 'https://flutterchina.club/docs/',
           javascriptMode: JavascriptMode.unrestricted,
           onWebViewCreated: (WebViewController webViewController) {
             _controller.complete(webViewController);
@@ -67,6 +67,12 @@ class _WebViewExampleState extends State<WebViewExample> {
           javascriptChannels: <JavascriptChannel>[
             _toasterJavascriptChannel(context),
           ].toSet(),
+          onSelectText: (String url,String text){
+            print("onSelectText $text");
+          },
+          onProgressChanged: (double progress){
+            print("onProgressChanged $progress");
+          },
           navigationDelegate: (NavigationRequest request) {
             if (request.url.startsWith('https://www.youtube.com/')) {
               print('blocking navigation to $request}');
