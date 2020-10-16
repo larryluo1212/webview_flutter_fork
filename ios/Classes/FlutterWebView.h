@@ -26,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * This class overrides some methods in `WKWebView` to serve the needs for the plugin.
  */
-@interface FLTWKWebView : WKWebView
+@interface FLTWKWebView : WKWebView<UIScrollViewDelegate>
 
 - (instancetype)initWithChannel:(FlutterMethodChannel*)channel;
 

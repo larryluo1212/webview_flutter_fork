@@ -44,6 +44,12 @@ FlutterMethodChannel *_methodChannel;
   return self;
 }
 
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView{
+    int x = scrollView.contentOffset.x/scrollView.contentScaleFactor;
+    int y = scrollView.contentOffset.y/scrollView.contentScaleFactor;
+    [_methodChannel invokeMethod:@"onScrollChanged" arguments:@{@"x" :[NSNumber numberWithInt:x],@"y":[NSNumber numberWithInt:y]}];
+    [self setNeedsLayout];
+}
 
 #pragma mark 自定义长按菜单
 - (BOOL)canPerformAction:(SEL)action withSender:(id)sender {
@@ -53,7 +59,7 @@ FlutterMethodChannel *_methodChannel;
         action == @selector(paste:) ||
         action == @selector(customShare:)
         ) {
-        return YES;
+        return [super canPerformAction:action withSender:sender];
     }
     //return [super canPerformAction:action withSender:sender];
     return NO;
@@ -82,6 +88,7 @@ FlutterMethodChannel *_methodChannel;
 - (void)setFrame:(CGRect)frame {
   [self createMenu];
   [super setFrame:frame];
+  self.scrollView.delegate = self;
   self.scrollView.contentInset = UIEdgeInsetsZero;
   // We don't want the contentInsets to be adjusted by iOS, flutter should always take control of
   // webview's contentInsets.

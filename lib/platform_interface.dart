@@ -32,6 +32,7 @@ abstract class WebViewPlatformCallbacksHandler {
   /// Invoked by [WebViewPlatformController] when select text
   void onSelectText(String url,String text);
   void onProgressChanged(double progress);
+  void onScrollChanged(int x,int y);
 
   /// Report web resource loading error to the host application.
   void onWebResourceError(WebResourceError error);
