@@ -22,7 +22,7 @@ flutter:
   plugin:
     platforms:
       android:
-        package: io.flutter.plugins.webviewflutter
+        package: io.flutter.plugins.webviewflutter.fork
         pluginClass: WebViewFlutterPlugin
       ios:
         pluginClass: FLTWebViewFlutterPluginFork
