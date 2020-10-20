@@ -10,6 +10,7 @@ import android.hardware.display.DisplayManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -24,6 +25,7 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.platform.PlatformView;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,6 +38,16 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
 
   // Verifies that a url opened by `Window.open` has a secure url.
   private class FlutterWebChromeClient extends WebChromeClient {
+    @Override
+    public void onProgressChanged(WebView view, int newProgress) {
+      if(methodChannel != null){
+        Map map = new HashMap<String,Object>();
+        map.put("progress",(double)newProgress);
+        methodChannel.invokeMethod("onProgressChanged",map);
+      }
+      super.onProgressChanged(view, newProgress);
+    }
+
     @Override
     public boolean onCreateWindow(
         final WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
@@ -83,11 +95,14 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
       Map<String, Object> params,
       View containerView) {
 
+    methodChannel = new MethodChannel(messenger, "plugins.flutter.io/webview.fork_" + id);
+    methodChannel.setMethodCallHandler(this);
+
     DisplayListenerProxy displayListenerProxy = new DisplayListenerProxy();
     DisplayManager displayManager =
         (DisplayManager) context.getSystemService(Context.DISPLAY_SERVICE);
     displayListenerProxy.onPreWebViewInitialization(displayManager);
-    webView = new InputAwareWebView(context, containerView);
+    webView = new InputAwareWebView(context, containerView,methodChannel);
     displayListenerProxy.onPostWebViewInitialization(displayManager);
 
     platformThreadHandler = new Handler(context.getMainLooper());
@@ -98,9 +113,20 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
     // Multi windows is set with FlutterWebChromeClient by default to handle internal bug: b/159892679.
     webView.getSettings().setSupportMultipleWindows(true);
     webView.setWebChromeClient(new FlutterWebChromeClient());
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+      webView.setOnScrollChangeListener(new View.OnScrollChangeListener() {
+        @Override
+        public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+          if(methodChannel!=null){
+            Map map = new HashMap<String,Object>();
+            map.put("x",scrollX);
+            map.put("y",scrollY);
+            methodChannel.invokeMethod("onScrollChanged",map);
+          }
+        }
+      });
+    }
 
-    methodChannel = new MethodChannel(messenger, "plugins.flutter.io/webview.fork_" + id);
-    methodChannel.setMethodCallHandler(this);
 
     flutterWebViewClient = new FlutterWebViewClient(methodChannel);
     Map<String, Object> settings = (Map<String, Object>) params.get("settings");

@@ -6,14 +6,28 @@ package io.flutter.plugins.webviewflutter.fork;
 
 import static android.content.Context.INPUT_METHOD_SERVICE;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.graphics.Rect;
 import android.os.Build;
 import android.util.Log;
+import android.view.ActionMode;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.webkit.ValueCallback;
 import android.webkit.WebView;
 import android.widget.ListPopupWindow;
+
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import io.flutter.plugin.common.MethodChannel;
 
 /**
  * A WebView subclass that mirrors the same implementation hacks that the system WebView does in
@@ -30,10 +44,81 @@ final class InputAwareWebView extends WebView {
   private View threadedInputConnectionProxyView;
   private ThreadedInputConnectionProxyAdapterView proxyAdapterView;
   private View containerView;
+  MethodChannel methodChannel;
 
-  InputAwareWebView(Context context, View containerView) {
+  InputAwareWebView(Context context, View containerView, MethodChannel methodChannel) {
     super(context);
     this.containerView = containerView;
+    this.methodChannel = methodChannel;
+    menuHandler = new MenuItem.OnMenuItemClickListener() {
+      @Override
+      public boolean onMenuItemClick(MenuItem item) {
+        switch (item.getItemId()) {
+          case 1:
+            redirectToSharePage();
+            break;
+          case 2:
+            clipData();
+            break;
+        }
+        return true;
+      }
+    };
+  }
+
+  private void clipData() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+      evaluateJavascript("window.getSelection().toString();", new ValueCallback<String>() {
+        @Override
+        public void onReceiveValue(String value) {
+          value = value.substring(1, value.length()-1);
+          ClipboardManager cm = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+          ClipData mClipData = ClipData.newPlainText("Label", value);
+          cm.setPrimaryClip(mClipData);
+          clearFocus();
+        }
+      });
+    }
+  }
+
+  private void redirectToSharePage() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+      evaluateJavascript("window.getSelection().toString();", new ValueCallback<String>() {
+        @Override
+        public void onReceiveValue(String value) {
+          String url = getUrl();
+          Map map = new HashMap<String,Object>();
+          map.put("url",url);
+          map.put("text",value);
+          methodChannel.invokeMethod("onSelectText",map);
+         }
+      });
+    }
+  }
+
+
+  private MenuItem.OnMenuItemClickListener menuHandler;
+
+  @Override
+  public ActionMode startActionMode(ActionMode.Callback callback) {
+    ActionMode actionMode = super.startActionMode(callback);
+    return resolveActionMode(actionMode);
+  }
+
+  @Override
+  public ActionMode startActionMode(ActionMode.Callback callback, int type){
+  ActionMode actionMode =  super.startActionMode(callback, type);
+    return resolveActionMode(actionMode);
+}
+
+  private ActionMode resolveActionMode(ActionMode actionMode) {
+    if (actionMode != null) {
+      final Menu menu = actionMode.getMenu();
+      menu.clear();
+      menu.add(0,1,0,"分享").setOnMenuItemClickListener(menuHandler);
+      menu.add(0,2,1,"复制").setOnMenuItemClickListener(menuHandler);
+    }
+    return actionMode;
   }
 
   void setContainerView(View containerView) {
