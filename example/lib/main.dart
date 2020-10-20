@@ -71,7 +71,7 @@ class _WebViewExampleState extends State<WebViewExample> {
             print("onSelectText $text");
           },
           onProgressChanged: (double progress){
-            print("onProgressChanged $progress");
+            print("onProgressChanged main $progress");
           },
           navigationDelegate: (NavigationRequest request) {
             if (request.url.startsWith('https://www.youtube.com/')) {
