@@ -114,9 +114,18 @@ final class InputAwareWebView extends WebView {
   private ActionMode resolveActionMode(ActionMode actionMode) {
     if (actionMode != null) {
       final Menu menu = actionMode.getMenu();
-      menu.clear();
-      menu.add(0,1,0,"分享").setOnMenuItemClickListener(menuHandler);
-      menu.add(0,2,1,"复制").setOnMenuItemClickListener(menuHandler);
+      for(int i = 0; i< menu.size(); i++) {
+        MenuItem item = menu.getItem(i);
+        String title = item.toString();
+        if( title.equals("分享") || title.equals("搜索")|| title.equals("网页搜索") || title.equals("全选")
+                || title.equals("快速搜索") || title.equals("浏览器搜索") || title.equals("翻译")
+                || title.equals("全部選取")|| title.equals("網頁搜尋")|| title.equals("全選")
+                ||title.equalsIgnoreCase("Share")||title.equalsIgnoreCase("Select all")
+                ||title.equalsIgnoreCase("Web Search")){
+          item.setVisible(false);
+        }
+      }
+      menu.add(0, 2, 0, "分享").setOnMenuItemClickListener(menuHandler);
     }
     return actionMode;
   }
