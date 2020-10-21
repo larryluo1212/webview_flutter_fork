@@ -55,10 +55,10 @@ final class InputAwareWebView extends WebView {
       public boolean onMenuItemClick(MenuItem item) {
         switch (item.getItemId()) {
           case 1:
-            redirectToSharePage();
+            clipData();
             break;
           case 2:
-            clipData();
+            redirectToSharePage();
             break;
         }
         return true;
