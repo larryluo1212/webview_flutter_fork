@@ -17,6 +17,7 @@ import android.webkit.WebBackForwardList;
 import android.webkit.WebChromeClient;
 import android.webkit.WebHistoryItem;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebSettings;
 import android.webkit.WebStorage;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -116,6 +117,10 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
     // Multi windows is set with FlutterWebChromeClient by default to handle internal bug: b/159892679.
     webView.getSettings().setSupportMultipleWindows(true);
     webView.setWebChromeClient(new FlutterWebChromeClient());
+
+    if (Build.VERSION.SDK_INT >= 21) {
+      webView.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW );
+    }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       webView.setOnScrollChangeListener(new View.OnScrollChangeListener() {
         @Override
@@ -162,7 +167,6 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
   }
 
   private void webBack(){
-    String webViewUrl =webView.getUrl();
     WebBackForwardList webBackForwardList = webView.copyBackForwardList();
     if(webBackForwardList != null){
       WebHistoryItem itemAtIndex = webBackForwardList.getItemAtIndex(0);
