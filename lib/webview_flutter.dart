@@ -652,6 +652,10 @@ class WebViewController {
     return _webViewPlatformController.currentUrl();
   }
 
+  Future<bool> webBack() {
+    return _webViewPlatformController.webBack();
+  }
+
   /// Checks whether there's a back history item.
   ///
   /// Note that this operation is asynchronous, and it is possible that the "canGoBack" state has

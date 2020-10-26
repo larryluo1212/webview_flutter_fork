@@ -11,8 +11,11 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.webkit.WebBackForwardList;
 import android.webkit.WebChromeClient;
+import android.webkit.WebHistoryItem;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebStorage;
 import android.webkit.WebView;
@@ -127,6 +130,15 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
       });
     }
 
+    webView.setOnKeyListener(new View.OnKeyListener() {
+      @Override
+      public boolean onKey(View v, int keyCode, KeyEvent event) {
+        if(keyCode == KeyEvent.KEYCODE_BACK){
+           webBack();
+        }
+        return false;
+      }
+    });
 
     flutterWebViewClient = new FlutterWebViewClient(methodChannel);
     Map<String, Object> settings = (Map<String, Object>) params.get("settings");
@@ -147,6 +159,29 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
       String url = (String) params.get("initialUrl");
       webView.loadUrl(url);
     }
+  }
+
+  private void webBack(){
+    String webViewUrl =webView.getUrl();
+    WebBackForwardList webBackForwardList = webView.copyBackForwardList();
+    if(webBackForwardList != null){
+      WebHistoryItem itemAtIndex = webBackForwardList.getItemAtIndex(0);
+      String url = itemAtIndex.getUrl();
+      if(url != null){
+          webView.loadUrl(url);
+          webView.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+              webView.clearHistory();
+            }
+          }, 1000);
+
+        }else{
+          webView.goBack();
+        }
+      }else{
+        webView.goBack();
+      }
   }
 
   @Override
@@ -197,6 +232,10 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
   @Override
   public void onMethodCall(MethodCall methodCall, Result result) {
     switch (methodCall.method) {
+      case "webBack":
+        webBack();
+        result.success(null);
+        break;
       case "loadUrl":
         loadUrl(methodCall, result);
         break;

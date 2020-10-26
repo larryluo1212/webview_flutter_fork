@@ -139,6 +139,7 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
 
   @override
   Future<String> getTitle() => _channel.invokeMethod<String>("getTitle");
+  Future<bool> webBack() => _channel.invokeMethod<bool>("webBack");
 
   @override
   Future<void> scrollTo(int x, int y) {
@@ -208,4 +209,5 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
       'autoMediaPlaybackPolicy': creationParams.autoMediaPlaybackPolicy.index,
     };
   }
+
 }

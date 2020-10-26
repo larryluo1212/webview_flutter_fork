@@ -210,6 +210,11 @@ abstract class WebViewPlatformController {
         "WebView canGoBack is not implemented on the current platform");
   }
 
+  Future<bool> webBack() {
+    throw UnimplementedError(
+        "WebView canGoBack is not implemented on the current platform");
+  }
+
   /// Checks whether there's a forward history item.
   Future<bool> canGoForward() {
     throw UnimplementedError(
