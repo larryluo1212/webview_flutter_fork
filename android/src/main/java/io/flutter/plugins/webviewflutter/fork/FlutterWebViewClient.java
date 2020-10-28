@@ -6,7 +6,10 @@ package io.flutter.plugins.webviewflutter.fork;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
@@ -16,11 +19,14 @@ import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
+
 import androidx.annotation.RequiresApi;
 import androidx.webkit.WebResourceErrorCompat;
 import androidx.webkit.WebViewClientCompat;
 import io.flutter.plugin.common.MethodChannel;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -85,7 +91,11 @@ class FlutterWebViewClient {
 //    }
     final String url = request.getUrl().toString();
     if (url.startsWith("weixin://")){
-      view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+      if (isWeixinAvilible(view.getContext())){
+        view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+      }else{
+        Toast.makeText(view.getContext(),"请安装微信客户端后再次尝试支付",Toast.LENGTH_SHORT).show();
+      }
       return  true;
     }
     Map<String, String> map = null;
@@ -112,12 +122,31 @@ class FlutterWebViewClient {
     return request.isForMainFrame();
   }
 
+  public static boolean isWeixinAvilible(Context context) {
+    final PackageManager packageManager = context.getPackageManager();// 获取packagemanager
+    List<PackageInfo> pinfo = packageManager.getInstalledPackages(0);// 获取所有已安装程序的包信息
+    if (pinfo != null) {
+      for (int i = 0; i < pinfo.size(); i++) {
+        String pn = pinfo.get(i).packageName;
+        if (pn.equals("com.tencent.mm")) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+
   boolean shouldOverrideUrlLoading(WebView view, String referer,String url) {
 //    if (!hasNavigationDelegate) {
 //      return false;
 //    }
     if (url.startsWith("weixin://")){
-      view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+      if (isWeixinAvilible(view.getContext())){
+        view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+      }else{
+        Toast.makeText(view.getContext(),"请安装微信客户端后再次尝试支付",Toast.LENGTH_SHORT).show();
+      }
       return  true;
     }
     Map<String, String> map = new HashMap<String, String>();
