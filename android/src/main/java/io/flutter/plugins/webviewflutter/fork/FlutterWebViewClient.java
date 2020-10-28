@@ -6,7 +6,9 @@ package io.flutter.plugins.webviewflutter.fork;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -77,12 +79,25 @@ class FlutterWebViewClient {
   }
 
   @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-  boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-    if (!hasNavigationDelegate) {
-      return false;
+  boolean shouldOverrideUrlLoading(WebView view,String  referer,WebResourceRequest request) {
+//    if (!hasNavigationDelegate) {
+//      return false;
+//    }
+    final String url = request.getUrl().toString();
+    if (url.startsWith("weixin://")){
+      view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+      return  true;
+    }
+    Map<String, String> map = null;
+    if(request.getRequestHeaders() == null){
+      map = new HashMap<String, String>();
+      map.put("Referer", referer);
+    }else{
+      map = request.getRequestHeaders();
+      map.put("Referer", referer);
     }
     notifyOnNavigationRequest(
-        request.getUrl().toString(), request.getRequestHeaders(), view, request.isForMainFrame());
+        request.getUrl().toString(), map, view, request.isForMainFrame());
     // We must make a synchronous decision here whether to allow the navigation or not,
     // if the Dart code has set a navigation delegate we want that delegate to decide whether
     // to navigate or not, and as we cannot get a response from the Dart delegate synchronously we
@@ -97,10 +112,16 @@ class FlutterWebViewClient {
     return request.isForMainFrame();
   }
 
-  boolean shouldOverrideUrlLoading(WebView view, String url) {
-    if (!hasNavigationDelegate) {
-      return false;
+  boolean shouldOverrideUrlLoading(WebView view, String referer,String url) {
+//    if (!hasNavigationDelegate) {
+//      return false;
+//    }
+    if (url.startsWith("weixin://")){
+      view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+      return  true;
     }
+    Map<String, String> map = new HashMap<String, String>();
+    map.put("Referer", referer);
     // This version of shouldOverrideUrlLoading is only invoked by the webview on devices with
     // webview versions  earlier than 67(it is also invoked when hasNavigationDelegate is false).
     // On these devices we cannot tell whether the navigation is targeted to the main frame or not.
@@ -109,7 +130,7 @@ class FlutterWebViewClient {
     Log.w(
         TAG,
         "Using a navigationDelegate with an old webview implementation, pages with frames or iframes will not work");
-    notifyOnNavigationRequest(url, null, view, true);
+    notifyOnNavigationRequest(url, map, view, true);
     return true;
   }
 
@@ -163,10 +184,12 @@ class FlutterWebViewClient {
 
   private WebViewClient internalCreateWebViewClient() {
     return new WebViewClient() {
+      String referer = "";
+
       @TargetApi(Build.VERSION_CODES.N)
       @Override
       public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-        return FlutterWebViewClient.this.shouldOverrideUrlLoading(view, request);
+        return FlutterWebViewClient.this.shouldOverrideUrlLoading(view, referer,request);
       }
 
       @Override
@@ -176,6 +199,9 @@ class FlutterWebViewClient {
 
       @Override
       public void onPageFinished(WebView view, String url) {
+        Uri currentUrl = Uri.parse(url);
+        String scheme = currentUrl.getScheme();
+        referer = scheme + "://" + currentUrl.getHost();
         FlutterWebViewClient.this.onPageFinished(view, url);
       }
 
@@ -204,14 +230,15 @@ class FlutterWebViewClient {
 
   private WebViewClientCompat internalCreateWebViewClientCompat() {
     return new WebViewClientCompat() {
+      String referer = "";
       @Override
       public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-        return FlutterWebViewClient.this.shouldOverrideUrlLoading(view, request);
+        return FlutterWebViewClient.this.shouldOverrideUrlLoading(view,referer, request);
       }
 
       @Override
       public boolean shouldOverrideUrlLoading(WebView view, String url) {
-        return FlutterWebViewClient.this.shouldOverrideUrlLoading(view, url);
+        return FlutterWebViewClient.this.shouldOverrideUrlLoading(view,referer, url);
       }
 
       @Override
@@ -221,6 +248,9 @@ class FlutterWebViewClient {
 
       @Override
       public void onPageFinished(WebView view, String url) {
+        Uri currentUrl = Uri.parse(url);
+        String scheme = currentUrl.getScheme();
+        referer = scheme + "://" + currentUrl.getHost();
         FlutterWebViewClient.this.onPageFinished(view, url);
       }
 

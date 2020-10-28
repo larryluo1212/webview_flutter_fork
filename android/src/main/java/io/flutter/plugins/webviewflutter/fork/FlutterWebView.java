@@ -7,6 +7,7 @@ package io.flutter.plugins.webviewflutter.fork;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.hardware.display.DisplayManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
@@ -57,13 +58,23 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
         final WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
       final WebViewClient webViewClient =
           new WebViewClient() {
+            String referer = "";
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+              Uri currentUrl = Uri.parse(url);
+              String scheme = currentUrl.getScheme();
+              referer = scheme + "://" + currentUrl.getHost();
+              super.onPageFinished(view, url);
+            }
+
             @TargetApi(Build.VERSION_CODES.LOLLIPOP)
             @Override
             public boolean shouldOverrideUrlLoading(
                 @NonNull WebView view, @NonNull WebResourceRequest request) {
               final String url = request.getUrl().toString();
               if (!flutterWebViewClient.shouldOverrideUrlLoading(
-                  FlutterWebView.this.webView, request)) {
+                  FlutterWebView.this.webView,referer, request)) {
                 webView.loadUrl(url);
               }
               return true;
@@ -72,7 +83,7 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
               if (!flutterWebViewClient.shouldOverrideUrlLoading(
-                  FlutterWebView.this.webView, url)) {
+                  FlutterWebView.this.webView,referer, url)) {
                 webView.loadUrl(url);
               }
               return true;
