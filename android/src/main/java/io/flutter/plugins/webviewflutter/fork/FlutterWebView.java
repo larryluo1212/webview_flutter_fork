@@ -5,7 +5,9 @@
 package io.flutter.plugins.webviewflutter.fork;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.display.DisplayManager;
 import android.net.Uri;
 import android.os.Build;
@@ -14,6 +16,7 @@ import android.os.Message;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.webkit.ValueCallback;
 import android.webkit.WebBackForwardList;
 import android.webkit.WebChromeClient;
 import android.webkit.WebHistoryItem;
@@ -22,27 +25,54 @@ import android.webkit.WebSettings;
 import android.webkit.WebStorage;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
+import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.plugin.platform.PlatformView;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class FlutterWebView implements PlatformView, MethodCallHandler {
+public class FlutterWebView implements PlatformView, MethodCallHandler{
   private static final String JS_CHANNEL_NAMES_FIELD = "javascriptChannelNames";
   private final InputAwareWebView webView;
   private final MethodChannel methodChannel;
   private final FlutterWebViewClient flutterWebViewClient;
   private final Handler platformThreadHandler;
 
+  public static ValueCallback<Uri[]> uploadMessage;
+  public final static int FILE_CHOOSER_RESULT_CODE = 1;
+
   // Verifies that a url opened by `Window.open` has a secure url.
   private class FlutterWebChromeClient extends WebChromeClient {
+
+    @Override
+    public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
+      if (uploadMessage != null) {
+        uploadMessage.onReceiveValue(null);
+        uploadMessage = null;
+      }
+
+      uploadMessage = filePathCallback;
+      try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+          ((Activity) webView.getContext()).startActivityForResult(fileChooserParams.createIntent(), FILE_CHOOSER_RESULT_CODE);
+        }
+      } catch (Exception e) {
+        Log.e("FlutterWebView", "e " + e.getMessage());
+        Toast.makeText(webView.getContext(), "Cannot Open File Chooser", Toast.LENGTH_LONG).show();
+        return false;
+      }
+      return true;
+    }
+
     @Override
     public void onProgressChanged(WebView view, int newProgress) {
       if(methodChannel != null){
